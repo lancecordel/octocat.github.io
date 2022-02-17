@@ -1,0 +1,57 @@
+html{
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+body{
+    background: grey;
+    height: 100%;
+    overflow: hidden;
+}
+#score{
+    position: absolute;
+    text-align: center;
+    width: 30%;
+    height: 10%;
+    top: 200px;
+    left: 400px;
+    color: rgb(255, 255, 255);
+    min-height: 50px;
+    max-height: 50px;
+    min-width: 400px;
+    max-width: 400px;
+    font-size: 30px;
+    z-index: 1;
+    border: 5px solid;
+    border-color: red;
+    border-radius: 7px;
+    display: none;
+}
+#background{
+    display: none;
+}
+#tank{
+    display: none;
+}
+#playerBackGroundImage{
+    display: none;
+    border: 2px solid;
+}
+#enemy{
+    display: none;
+}
+#gameBoard{
+    background: rgb(247, 247, 248);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border: 2px solid green;
+}
+#gameBoard{
+    transform: translate(-50%, -50%)
+}
+
+#bullet{
+    display: none;
+}
+
