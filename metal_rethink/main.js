@@ -6,22 +6,22 @@ const score = document.querySelector('#score');
 gameBoard.width = 800;
 gameBoard.height = 562;
 
-class tankBullet{
-    constructor(x, y){
-        this.velocityX = 50;
-        this.x = x;
-        this.y = y;
-        this.radius = 40;
-    }
-    drawnCanonBall(){
-        context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        this.x = BadGuy.width;
-        this.y = BadGuy.height;
-    }
-    updateCanonball(){
-        this.x += this.velocityX;
-    }
-}
+// class tankBullet{
+//     constructor(x, y){
+//         this.velocityX = 50;
+//         this.x = x;
+//         this.y = y;
+//         this.radius = 40;
+//     }
+//     drawnCanonBall(){
+//         context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+//         this.x = BadGuy.width;
+//         this.y = BadGuy.height;
+//     }
+//     updateCanonball(){
+//         this.x += this.velocityX;
+//     }
+// }
 
 class BadGuy{
     constructor(boardWidth, boardHeight){
@@ -47,24 +47,32 @@ class BadGuy{
     drawTank(){
         context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
     }
-    updateTank(mag){
+    updateTank(mag){            //do the same thing under bullet update to remove tank after impact
         this.x += this.velocity
         
         mag.forEach(bullet=>{
+            //// If Collision between bullet and tank
             if (this.x < bullet.x + bullet.width &&
                 this.x + this.width > bullet.x &&  
                 this.y < bullet.y + bullet.height &&
                 this.y + this.height > bullet.y) {
+
+                    //Remove Bullet After Impact
+                    bullet.markedForDeletion = true;
+                    
+                    //change animation frames of tank
                     this.spritePositionY = 1200;
                      this.height = 75;
                     this.width = 115
+
                 if(this.firstSpriteXPosition >= 900){
                     this.firstSpriteXPosition = 115;
                     }else{this.firstSpriteXPosition += 115}
-                   
-                    
             }
         })  
+        if(this.firstSpriteXPosition >= this.spritePositionWidth * 7){
+            this.firstSpriteXPosition = 0
+        }else(this.firstSpriteXPosition += 132)
 
         if(this.x < -2000){
            this.markedForDeletion = true;
