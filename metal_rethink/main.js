@@ -9,8 +9,7 @@ gameBoard.height = 562;
 
 class BadGuyBullet{
     constructor(x, y){
-        this.xVelocity = xVelocity;
-        this.yVelocity = yVelocity;
+        this.xVelocity;
         this.x = x;
         this.y = y;
         this.radius = 20;
@@ -22,7 +21,7 @@ class BadGuyBullet{
         }
 
     updateBullet(){
-        this.x -= this.velocityX;
+        this.x -= this.xVelocity;
 
         }
 }
@@ -245,7 +244,7 @@ let enemyMag =[];
 function enemyFire(){
     let timer = setInterval(() => {
         if(enemyMag.length < 10 || enemyMag.length === 0){
-        enemyMag.push(new BadGuyBullet(400, 400, -20, 0));
+        enemyMag.push(new BadGuyBullet(400, 400));
         console.log(enemyMag)
         }
     }, 1000);
