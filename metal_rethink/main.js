@@ -3,21 +3,33 @@ const gameBoard = document.querySelector('#gameBoard');
 const context = gameBoard.getContext('2d');
 const score = document.querySelector('#score');
 
-
 gameBoard.width = 800;
 gameBoard.height = 562;
 
-class BadGuyBullet{
+let interval = 100;
+let frame = interval / 100;
+
+
+// arrays....
+let enemyFleet = [];
+let mag = [];
+let enemyMag =[];
+
+//---------------------------------------------------ENEMY BULLET------------------------------------------------------------
+class EnemyBullet{
     constructor(x, y){
-        this.xVelocity;
+        this.xVelocity = 40;
         this.x = x;
         this.y = y;
-        this.radius = 20;
+        this.radius = 10;
     }
     drawBullet(){
+        context.beginPath();
         context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        context.fillStyle = 'red';
+        context.fillStyle = 'orange';
         context.fill();
+        context.strokeSize = 4;
+        context.stroke();
         }
 
     updateBullet(){
@@ -26,6 +38,7 @@ class BadGuyBullet{
         }
 }
 
+//-----------------------------------------------------------------TANK-----------------------------------------------
 class BadGuy{
     constructor(boardWidth, boardHeight){
         this.boardWidth = boardWidth;
@@ -41,8 +54,8 @@ class BadGuy{
         this.width = 135;
         this.height = 120;
         this.image = document.querySelector('#tank');
-        this.x = this.boardWidth + this.boardWidth/ 2;
-        this.y = randomRange(this.boardHeight - this.height, this.boardHeight - this.height - 100);
+        this.x = gameBoard.width + gameBoard.width / 2;
+        this.y = randomRange(gameBoard.height - this.height, gameBoard.height - this.height - 100);
         this.velocity = -10;
 
         // randomRange(this.boardHeight - this.height, this.boardHeight - this.height - this.midRoad - this.midRoad);
@@ -50,7 +63,7 @@ class BadGuy{
     drawTank(){
         context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
     }
-    updateTank(mag){            //do the same thing under bullet update to remove tank after impact
+    updateTank(mag){            //pass 'player' bullet array for collision detection with tank
         this.x += this.velocity
         
         mag.forEach(bullet=>{
@@ -81,9 +94,13 @@ class BadGuy{
            this.markedForDeletion = true;
         }
     }
+    shoot(enemyMag){
+        enemyMag.push(new EnemyBullet(this.x + 37 , this.y + this.height/2 - 20)); //push bullet into mag array when called.
+    }
     
 }
 
+////------------------------------------------------------------BACKGROUND------------------------------------------------------
 class Background{
     constructor(boardWidth, boardHeight){
         this.boardWidth = boardWidth;
@@ -101,7 +118,8 @@ class Background{
     backGroundScroll(){
         this.x -= this.scroll;
         if(this.x > -1480){
-            this.x -=this.scroll;        }else { 
+            this.x -=this.scroll;
+        }else { 
             this.scroll = 0;
             if(this.scroll === 0){
                 score.style.display = 'block'
@@ -109,11 +127,10 @@ class Background{
             }
         }
     }
-
 }
+///-----------------------------------------------------PLAYER BULLET--------------------------------------------------------------
 class Bullet{
     constructor(x, y, velocityX, velocityY){
-
         this.image = document.querySelector('#bullet');
         this. bulletStartPosition = 0;
         this.bulletYposition = 0;
@@ -147,9 +164,9 @@ class Bullet{
         }
     }
 
+////////-------------------------------------------PLAYER-------------------------------------------------///////////
 class Player{
     constructor(boardWidth, boardHeight){
-
         this.boardWidth = boardWidth; //canvas width
         this.boardHeight = boardHeight; //canvas height
         this.image = document.querySelector('#playerBackGroundImage');
@@ -168,11 +185,17 @@ class Player{
         this.height = 110;
         this.x = 0;
         this.y = this.boardHeight - this.height - this.buffer;
-
+        this.hitAreaX = this.x + this.width/2 - 20;
+        this.hitAreaXY = this.y + this.height/2;
+        this.hitAreaRadius = this.height/3;
     }
     drawPlayer(){
                            //source             sourceX                  sourceY                sourceW             sourceH                       
         context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
+        ///player circular collision area
+        context.beginPath();
+        context.arc(this.x + this.width/2 - 20, this.y + this.height/2, this.height/3, 0, 2 * Math.PI)
+        context.stroke();
         
     }
     upDatePlayer(controller){
@@ -213,6 +236,7 @@ class Player{
     }
 }
 
+////-----------------------------------------------------------------------GAME CONTROLLER---------------------------------------
 class Controller{
     constructor(){
         this.input = [];
@@ -225,7 +249,7 @@ class Controller{
             if(e.key === "ArrowDown" || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
                 this.input.splice(this.input.indexOf(e.key), 1)
             }
-        })
+        });
     }
 }
 
@@ -233,75 +257,74 @@ class Controller{
 function randomRange(min,max){
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
-console.log(randomRange(1, 100))
-
-// arrays....
-let enemyFleet = [];
-let mag = [];
-let enemyMag =[];
-
-//create function to generate Enemy Bullets At Random times
-function enemyFire(){
-    let timer = setInterval(() => {
-        if(enemyMag.length < 10 || enemyMag.length === 0){
-        enemyMag.push(new BadGuyBullet(400, 400));
-        console.log(enemyMag)
-        }
-    }, 1000);
-}
-
-enemyFire()
-
 
 //Instantiate background, tank, controller, player;
 const background = new Background(gameBoard.width,gameBoard.height);
-const tank = new BadGuy(gameBoard.with, gameBoard.height);
+const tank = new BadGuy();
 const controller = new Controller();
 const player = new Player(gameBoard.width, gameBoard.height); 
 
-//Push bullets into 'mag' arra
+//Push bullets into 'mag' array
 document.addEventListener('keydown',(e)=>{
     if(e.key === ' '){
-        mag.push(new Bullet(player.x + player.width - 43, player.y + 40, 40, 0))
+        let xShim = 43;
+        let yShim = 40;
+        mag.push(new Bullet(player.x + player.width - xShim, player.y + yShim, 40, 0))
     }
 })
 
-// Main Animator
+////-------------------------------------------------------------GAME LOOP-------------------------------------------------
 function Game(){
 setInterval(() => {
-    if(score.innerHTML === 'YOU MADE IT TO THE END!') //stop game if this condition is true
+    let tankFiring = Math.floor(Math.random() * enemyFleet.length); //variable to select a random tank in the array
+
+    frame++ //kept trak of framerate for purpose of timing events.
+
+    if(score.innerHTML === 'YOU MADE IT TO THE END!'){ //stop game if this condition is true
     return;
+    }
+
     context.clearRect(0, 0, gameBoard.width, gameBoard.height); //clear screen after every frame
+
     background.drawBackGround(gameBoard.width, gameBoard.height);  //make background visible
     background.backGroundScroll() //update background position every frame
-
 
     // remove collision objects
     enemyFleet = enemyFleet.filter(tank=>!tank.markedForDeletion); //remove tanks market for deletion
     mag = mag.filter(bullet=> !bullet.markedForDeletion); // remove bullets market for deletion
+    enemyMag = enemyMag.filter(bullet => !bullet.markedForDeletion);
 
     player.drawPlayer();  //make 'player' visible with every update
     player.upDatePlayer(controller) //pass controller argument so player can be controlled
 
-    /
     mag.forEach(bullet=> {
         bullet.updateBullet(enemyFleet) //pass fleet through bullet update for collision detection
-        bullet.drawBullet()
+        bullet.drawBullet() //render bullet
+    });
+
+    enemyMag.forEach(bullet=>{
+        bullet.updateBullet();
+        bullet.drawBullet();
+        if(bullet.x < -50){ bullet.markedForDeletion = true } //if bullet goes of screen marke for deletion
+        console.log(enemyMag)
     });
 
     enemyFleet.forEach(tank =>{
-        tank.updateTank(mag); //pas mag through tank fleet for collision detection
+        tank.updateTank(mag); //pass mag through tank fleet for collision detection
         tank.drawTank();
     });
+
+     //every 10 frames    if array is not 0       this random tank fires if its within view
+    if(frame % 10 === 0 && enemyFleet.length > 0 && enemyFleet[tankFiring].x < gameBoard.width){  
+        enemyFleet[tankFiring].shoot(enemyMag); //set random tanks to fire
+    }
  
-    // console.log(mag)
-}, 100)
+}, interval)
 
 // push tanks into 'enemyFleet' array every 3 seconds
 let timer = setInterval(() =>{
-    enemyFleet.push(new BadGuy(gameBoard.width, gameBoard.height))
-    
-}, 3000);
+    enemyFleet.push(new BadGuy())
+}, 5000);
 
 }
 
