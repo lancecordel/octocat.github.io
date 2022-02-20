@@ -230,7 +230,7 @@ class Player{
                 this.firstSpriteXPosition = 1850; //death scene
                 this.spritePositionY = 2263;
                 clearTimeout(timer)
-            }, 20);
+            }, 100);
         }
         //set timeout after loss
         if(this.youLose){
