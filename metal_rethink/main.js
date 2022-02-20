@@ -28,13 +28,11 @@ class EnemyBullet{
         context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         context.fillStyle = 'orange';
         context.fill();
-        context.strokeSize = 4;
         context.stroke();
         }
 
-    updateBullet(){
+    updateBullet(player){
         this.x -= this.xVelocity;
-
         }
 }
 
@@ -54,9 +52,11 @@ class BadGuy{
         this.width = 135;
         this.height = 120;
         this.image = document.querySelector('#tank');
-        this.x = gameBoard.width + gameBoard.width / 2;
+        this.x = gameBoard.width;
         this.y = randomRange(gameBoard.height - this.height, gameBoard.height - this.height - 100);
         this.velocity = -10;
+        this.hits = []
+
 
         // randomRange(this.boardHeight - this.height, this.boardHeight - this.height - this.midRoad - this.midRoad);
     }
@@ -65,7 +65,7 @@ class BadGuy{
     }
     updateTank(mag){            //pass 'player' bullet array for collision detection with tank
         this.x += this.velocity
-        
+
         mag.forEach(bullet=>{
             //// If Collision between bullet and tank
             if (this.x < bullet.x + bullet.width &&
@@ -77,13 +77,13 @@ class BadGuy{
                     bullet.markedForDeletion = true;
                     
                     //change animation frames of tank
-                    this.spritePositionY = 1200;
-                     this.height = 75;
-                    this.width = 115
+                //     this.spritePositionY = 1200;
+                //      this.height = 75;
+                //     this.width = 115
 
-                if(this.firstSpriteXPosition >= 900){
-                    this.firstSpriteXPosition = 115;
-                    }else{this.firstSpriteXPosition += 115}
+                // if(this.firstSpriteXPosition >= 900){
+                //     this.firstSpriteXPosition = 115;
+                //     }else{this.firstSpriteXPosition += 115}
             }
         })  
         if(this.firstSpriteXPosition >= this.spritePositionWidth * 7){
@@ -115,13 +115,13 @@ class Background{
     drawBackGround(){
         context.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
-    backGroundScroll(){
+    backGroundScroll(player){
         this.x -= this.scroll;
-        if(this.x > -1480){
+        if(this.x > -1480 && !player.playerHit){ //check if player was hit and if background is within  range
             this.x -=this.scroll;
         }else { 
             this.scroll = 0;
-            if(this.scroll === 0){
+            if(this.scroll === 0 && !player.playerHit){ //if background is at the end, and player not hit show win message
                 score.style.display = 'block'
                 score.innerHTML = 'YOU MADE IT TO THE END!';
             }
@@ -146,7 +146,6 @@ class Bullet{
     } 
     updateBullet(enemyFleet){
             this.x += this.velocityX
-
             //if bullet goes beyond border mark to be deleted
             if(this.x > gameBoard.width){
                 this.markedForDeletion = true
@@ -158,13 +157,16 @@ class Bullet{
                 this.x + this.width > tank.x &&  
                 this.y < tank.y + tank.height &&
                 this.y + this.height > tank.y){
-                    tank.markedForDeletion = true;
+                    //keep track of hits each tank recieves
+                    tank.hits.push(1)
+                    //if hits exceed 11 destroy tank
+                    if(tank.hits.length > 11){ tank.markedForDeletion = true }
                 }
             });
-        }
+        } 
     }
 
-////////-------------------------------------------PLAYER-------------------------------------------------///////////
+////////------------------------------------------------------------PLAYER-------------------------------------------------///////////
 class Player{
     constructor(boardWidth, boardHeight){
         this.boardWidth = boardWidth; //canvas width
@@ -173,40 +175,81 @@ class Player{
         this.firstSpriteXPosition = 0;
         this.spritePositionWidth = 181; //width on sprite sheet
         this.runFrameX = 181;
-        // this.jumpFrameX = 176;
         this.maxRun = 181 * 9; //Run Frames
         this.spritePositionY = 220; //begining y position on sprite sheet.
+        this.deathPositionY = 2263;
+        this.lose = [0, 188, 172, 170, 165, 166, 169, 166, 162, 161, 165, 166, 164] //0, 188, 360, 530, 695, 861, 1030, 1196, 1358, 1519, 1684, 1850, 2014
+        this.reduce = this.lose.reduce((acc, num) => acc + num);
         this.velocityX = 8;
         this.velocityY = 8;
         this.velocityXback = 14;
-        // this.gravity = 5;
         this.buffer = 5;
         this.width = 182;
         this.height = 110;
         this.x = 0;
         this.y = this.boardHeight - this.height - this.buffer;
-        this.hitAreaX = this.x + this.width/2 - 20;
-        this.hitAreaXY = this.y + this.height/2;
-        this.hitAreaRadius = this.height/3;
+        this.playerHit = false;
+        this.running = true;
+        this.youLose = false;
+        this.walkingBack = false;
+        this.walkingUp = false;
+        this.walkingDown = false;
     }
     drawPlayer(){
+        //Hit Area Circle will now update with player location
+        this.hitAreaX = this.x + this.width/2 - 20;
+        this.hitAreaY = this.y + this.height/2 - 10;
+        this.hitAreaRadius = this.height/3;
+
                            //source             sourceX                  sourceY                sourceW             sourceH                       
         context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
+        
         ///player circular collision area
         context.beginPath();
-        context.arc(this.x + this.width/2 - 20, this.y + this.height/2, this.height/3, 0, 2 * Math.PI)
+        context.arc(this.x + this.width/2 - 20, this.y + this.height/2 - 10, this.height/3, 0, 2 * Math.PI)
         context.stroke();
-        
+
     }
-    upDatePlayer(controller){
-        if(controller.input.indexOf('ArrowRight') > -1 && this.x + this.width + this.buffer < this.boardWidth){
-        this.x += this.velocityX;
-        this.spritePositionY = 220;
+    upDatePlayer(controller, enemyMag, background){
+
+        //check distance between enemy bullet and player
+        enemyMag.forEach(bullet => {
+            
+            //Handle collision between 'player' and 'enemy bullet'
+            const distance = getDistance(this.hitAreaX, bullet.x, this.hitAreaY, bullet.y)
+            if(distance < this.hitAreaRadius + bullet.radius){
+                bullet.markedForDeletion = true;  //mark enemy bullet for deletion after impact
+                this.playerHit = true; //set player hit to true
+            }
+        });
+        //set timeout for 'lose scene' after player is hit
+        if(this.playerHit){
+            this.youLose = true;
+            let timer = setTimeout(() => {
+                this.running = false;
+                this.firstSpriteXPosition = 1850; //death scene
+                this.spritePositionY = 2263;
+                clearTimeout(timer)
+            }, 20);
+        }
+        //set timeout after loss
+        if(this.youLose){
+            let timer = setTimeout(() => {
+                score.innerHTML = 'YOU LOSE!'
+                clearTimeout(timer)
+            }, 3000);
+        }
+   
+        else if(controller.input.indexOf('ArrowRight') > -1 && this.x + this.width + this.buffer < this.boardWidth && !this.playerHit){
+           this.running = true;
+            this.x += this.velocityX;
+            this.spritePositionY = 220;
          if(this.firstSpriteXPosition >= this.maxRun){
              this.firstSpriteXPosition = 0;
          }else{ this.firstSpriteXPosition += this.runFrameX}
         }
-        else if(controller.input.indexOf('ArrowLeft') > -1 && this.x > 0){
+        else if(controller.input.indexOf('ArrowLeft') > -1 && this.x > 0 && !this.playerHit){
+            this.walkingBack = true;
             this.x -= this.velocityXback;
             this.spritePositionY = 433;
             if(this.firstSpriteXPosition >= this.runFrameX * 4){
@@ -216,24 +259,36 @@ class Player{
         else if(this.x < 0){
             this.x = 0;
         }
-        else if(controller.input.indexOf('ArrowUp') > -1 && this.y > this.boardHeight * .60){
+        else if(controller.input.indexOf('ArrowUp') > -1 && this.y > this.boardHeight * .60 && !this.playerHit){
+            this.walkingUp = true;
             this.y -= this.velocityY; 
             this.spritePositionY = 220;
             if(this.firstSpriteXPosition >= this.maxRun){
                 this.firstSpriteXPosition = 0;
             }else{ this.firstSpriteXPosition += this.runFrameX}        
         } 
-        else if(controller.input.indexOf('ArrowDown') > -1 && this.y + this.height < this.boardHeight){
+        else if(controller.input.indexOf('ArrowDown') > -1 && this.y + this.height < this.boardHeight && !this.playerHit){
+            this.walkingDown = true;
             this.y += this.velocityY; 
             this.spritePositionY = 220;
             if(this.firstSpriteXPosition >= this.maxRun){
                 this.firstSpriteXPosition = 0;
             }else{ this.firstSpriteXPosition += this.runFrameX}        
         } 
+
         if(this.x + this.width + this.buffer > gameBoard.width ){
             this.x = this.boardWidth - this.width;
         } 
+
+        // if(this.running){
+        //  //default run state.....
+        // if(this.firstSpriteXPosition >= this.maxRun){
+        //     this.firstSpriteXPosition = 0;
+        // }else{ this.firstSpriteXPosition += this.runFrameX}
+        // } 
+
     }
+    
 }
 
 ////-----------------------------------------------------------------------GAME CONTROLLER---------------------------------------
@@ -258,6 +313,21 @@ function randomRange(min,max){
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+function add(arr, position) {
+    var accumulator = 0;
+    for (var i = 0;i <= position; i++) {
+         accumulator += arr[i];
+    }
+    return i;
+}
+
+//get distance between circular objects
+function getDistance(x1, x2, y1, y2){
+	const xcoordinate = x2 - x1;
+	const ycoordinate = y2 - y1;
+	return Math.sqrt(Math.pow(xcoordinate, 2) + Math.pow(ycoordinate, 2));
+}
+
 //Instantiate background, tank, controller, player;
 const background = new Background(gameBoard.width,gameBoard.height);
 const tank = new BadGuy();
@@ -280,14 +350,15 @@ setInterval(() => {
 
     frame++ //kept trak of framerate for purpose of timing events.
 
-    if(score.innerHTML === 'YOU MADE IT TO THE END!'){ //stop game if this condition is true
-    return;
+    if(score.innerHTML === 'YOU MADE IT TO THE END!' || score.innerHTML === 'YOU LOSE!'){
+         //stop game if this condition is true
+        return;
     }
 
     context.clearRect(0, 0, gameBoard.width, gameBoard.height); //clear screen after every frame
 
     background.drawBackGround(gameBoard.width, gameBoard.height);  //make background visible
-    background.backGroundScroll() //update background position every frame
+    background.backGroundScroll(player) //update background position every frame
 
     // remove collision objects
     enemyFleet = enemyFleet.filter(tank=>!tank.markedForDeletion); //remove tanks market for deletion
@@ -295,7 +366,7 @@ setInterval(() => {
     enemyMag = enemyMag.filter(bullet => !bullet.markedForDeletion);
 
     player.drawPlayer();  //make 'player' visible with every update
-    player.upDatePlayer(controller) //pass controller argument so player can be controlled
+    player.upDatePlayer(controller, enemyMag) //pass controller argument so player can be controlled
 
     mag.forEach(bullet=> {
         bullet.updateBullet(enemyFleet) //pass fleet through bullet update for collision detection
@@ -303,10 +374,10 @@ setInterval(() => {
     });
 
     enemyMag.forEach(bullet=>{
-        bullet.updateBullet();
+        bullet.updateBullet(player);
         bullet.drawBullet();
         if(bullet.x < -50){ bullet.markedForDeletion = true } //if bullet goes of screen marke for deletion
-        console.log(enemyMag)
+        
     });
 
     enemyFleet.forEach(tank =>{
@@ -324,7 +395,7 @@ setInterval(() => {
 // push tanks into 'enemyFleet' array every 3 seconds
 let timer = setInterval(() =>{
     enemyFleet.push(new BadGuy())
-}, 5000);
+}, 4000);
 
 }
 
@@ -332,9 +403,3 @@ let timer = setInterval(() =>{
 Game();
 
 }
-
-
-
-
-
-
