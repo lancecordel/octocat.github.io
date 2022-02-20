@@ -1,10 +1,13 @@
 window.onload = () =>{
 const gameBoard = document.querySelector('#gameBoard');
 const context = gameBoard.getContext('2d');
-const score = document.querySelector('#score');
+const statusTracker = document.querySelector('#statusTracker');
 
 gameBoard.width = 800;
 gameBoard.height = 562;
+
+width = gameBoard.width;
+height = gameBoard.height;
 
 let interval = 100;
 let frame = interval / 100;
@@ -47,7 +50,7 @@ class BadGuy{
         this.spriteExplosionWidth = 115;
         this.maxSpriteWidth = this.spritePositionWidth * 7;
         this.midRoad = 30;
-        this.score = 0;
+        this.statusTracker = 0;
 
         this.width = 135;
         this.height = 120;
@@ -85,15 +88,17 @@ class BadGuy{
                 //     this.firstSpriteXPosition = 115;
                 //     }else{this.firstSpriteXPosition += 115}
             }
-        })  
+        }) 
+        //////Animate tank 
         if(this.firstSpriteXPosition >= this.spritePositionWidth * 7){
             this.firstSpriteXPosition = 0
         }else(this.firstSpriteXPosition += 132)
-
+        ///remove tank when it gets off of screen
         if(this.x < -1000){
            this.markedForDeletion = true;
         }
     }
+    ////Tank shoots back
     shoot(enemyMag){
         enemyMag.push(new EnemyBullet(this.x + 37 , this.y + this.height/2 - 20)); //push bullet into mag array when called.
     }
@@ -112,9 +117,11 @@ class Background{
         this.y = 0;
         this.scroll = 2;
     }
+    //backGround Image
     drawBackGround(){
         context.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
+    //background movement
     backGroundScroll(player){
         this.x -= this.scroll;
         if(this.x > -1480 && !player.playerHit){ //check if player was hit and if background is within  range
@@ -122,8 +129,8 @@ class Background{
         }else { 
             this.scroll = 0;
             if(this.scroll === 0 && !player.playerHit){ //if background is at the end, and player not hit show win message
-                score.style.display = 'block'
-                score.innerHTML = 'YOU MADE IT TO THE END!';
+                // statusTracker.style.display = 'block'
+                statusTracker.innerHTML = 'YOU MADE IT TO THE END!';
             }
         }
     }
@@ -178,8 +185,8 @@ class Player{
         this.maxRun = 181 * 9; //Run Frames
         this.spritePositionY = 220; //begining y position on sprite sheet.
         this.deathPositionY = 2263;
-        this.lose = [0, 188, 172, 170, 165, 166, 169, 166, 162, 161, 165, 166, 164] //0, 188, 360, 530, 695, 861, 1030, 1196, 1358, 1519, 1684, 1850, 2014
-        this.reduce = this.lose.reduce((acc, num) => acc + num);
+        // this.lose = [0, 188, 172, 170, 165, 166, 169, 166, 162, 161, 165, 166, 164] //0, 188, 360, 530, 695, 861, 1030, 1196, 1358, 1519, 1684, 1850, 2014
+        // this.reduce = this.lose.reduce((acc, num) => acc + num);
         this.velocityX = 8;
         this.velocityY = 8;
         this.velocityXback = 14;
@@ -236,7 +243,11 @@ class Player{
         //set timeout after loss
         if(this.youLose){
             let timer = setTimeout(() => {
-                score.innerHTML = 'YOU LOSE!'
+                statusTracker.innerHTML = 'YOU LOSE!' //if status is 'YOU LOSE' game loop stops
+                context.fillStyle = 'red';
+                context.font = 'bold 60px Comic Sans MS'
+                context.fillText('YOU LOSE', width/2 - 100, height/2)
+                context.strokeText('YOU LOSE', width/2 - 100, height/2)
                 clearTimeout(timer)
             }, 3000);
         }
@@ -337,7 +348,7 @@ const player = new Player(gameBoard.width, gameBoard.height);
 
 //Push bullets into 'mag' array
 document.addEventListener('keydown',(e)=>{
-    if(e.key === ' '){
+    if(e.key === ' ' && !player.playerHit){
         let xShim = 43;
         let yShim = 40;
         mag.push(new Bullet(player.x + player.width - xShim, player.y + yShim, 40, 0))
@@ -351,7 +362,7 @@ setInterval(() => {
 
     frame++ //kept trak of framerate for purpose of timing events.
 
-    if(score.innerHTML === 'YOU MADE IT TO THE END!' || score.innerHTML === 'YOU LOSE!'){
+    if(statusTracker.innerHTML === 'YOU MADE IT TO THE END!' || statusTracker.innerHTML === 'YOU LOSE!'){
          //stop game if this condition is true
         return;
     }
@@ -402,5 +413,7 @@ let timer = setInterval(() =>{
 
 //deploy game
 Game();
+
+console.log(context)
 
 }
