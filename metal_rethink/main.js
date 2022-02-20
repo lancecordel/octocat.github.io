@@ -228,6 +228,7 @@ class Player{
             let timer = setTimeout(() => {
                 this.running = false;
                 this.firstSpriteXPosition = 1850; //death scene
+                this.firstSpriteXPosition = 1850? this.firstSpriteXPosition = 1850: this.firstSpriteXPosition = 1850;
                 this.spritePositionY = 2263;
                 clearTimeout(timer)
             }, 100);
