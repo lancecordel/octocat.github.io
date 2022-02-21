@@ -383,6 +383,7 @@ class Player{
         }
         if(bossHouse.length === 0){
             this.youWin = true;
+            statusTracker = 'WIN';
             win();
         }
 
@@ -405,6 +406,14 @@ class Player{
                 context.font = 'bold 60px Comic Sans MS'
                 context.fillText('YOU LOSE', width/2 - 100, height/2)
                 context.strokeText('YOU LOSE', width/2 - 100, height/2)
+                clearTimeout(timer)
+            }, 3000);
+        }
+
+        if(this.youWin){
+            let timer = setTimeout(() => {
+                statusTracker = 'WIN' //if status is 'LOSE' game loop stops
+
                 clearTimeout(timer)
             }, 3000);
         }
@@ -539,7 +548,7 @@ setInterval(() => {
 
     frame++ //kept trak of framerate for purpose of timing events.
 console.log(statusTracker)
-    if(statusTracker === 'LOSE'){
+    if(statusTracker === 'LOSE' || statusTracker === 'WIN'){
          //stop game if this condition is true
         return;
     }
@@ -596,6 +605,7 @@ console.log(statusTracker)
                 }
             });
     } 
+    console.log(enemyFleet, enemyMag)
 }, interval)
 
 
