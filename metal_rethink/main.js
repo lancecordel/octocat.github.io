@@ -1,7 +1,8 @@
 window.onload = () =>{
 const gameBoard = document.querySelector('#gameBoard');
 const context = gameBoard.getContext('2d');
-const statusTracker = document.querySelector('#statusTracker');
+let statusTracker;
+let end = false;
 
 gameBoard.width = 800;
 gameBoard.height = 562;
@@ -9,8 +10,8 @@ gameBoard.height = 562;
 width = gameBoard.width;
 height = gameBoard.height;
 
-let interval = 100;
-let frame = interval / 100;
+let interval = 60;
+let frame = interval / 60;
 
 
 // arrays....
@@ -130,7 +131,8 @@ class Background{
             this.scroll = 0;
             if(this.scroll === 0 && !player.playerHit){ //if background is at the end, and player not hit show win message
                 // statusTracker.style.display = 'block'
-                statusTracker.innerHTML = 'YOU MADE IT TO THE END!';
+                statusTracker = 'END';
+                end = true;
             }
         }
     }
@@ -150,6 +152,7 @@ class Bullet{
     }
     drawBullet(){
         context.drawImage(this.image, this.bulletStartPosition, this.bulletYposition, 10, 10, this.x, this.y, this.width, this.height)
+        
     } 
     updateBullet(enemyFleet){
             this.x += this.velocityX
@@ -201,6 +204,7 @@ class Player{
         this.walkingBack = false;
         this.walkingUp = false;
         this.walkingDown = false;
+        this.timer = 0;
     }
     drawPlayer(){
         //Hit Area Circle will now update with player location
@@ -229,6 +233,16 @@ class Player{
                 this.playerHit = true; //set player hit to true
             }
         });
+
+        if(statusTracker === 'END'){
+            while(this.timer > 150 && this.timer < 400){
+                endText();
+                break;
+            }
+            this.timer++
+
+        }
+
         //set timeout for 'lose scene' after player is hit
         if(this.playerHit){
             this.youLose = true;
@@ -243,7 +257,7 @@ class Player{
         //set timeout after loss
         if(this.youLose){
             let timer = setTimeout(() => {
-                statusTracker.innerHTML = 'YOU LOSE!' //if status is 'YOU LOSE' game loop stops
+                statusTracker = 'LOSE' //if status is 'LOSE' game loop stops
                 context.fillStyle = 'red';
                 context.font = 'bold 60px Comic Sans MS'
                 context.fillText('YOU LOSE', width/2 - 100, height/2)
@@ -291,14 +305,6 @@ class Player{
         if(this.x + this.width + this.buffer > gameBoard.width ){
             this.x = this.boardWidth - this.width;
         } 
-
-        // if(this.running){
-        //  //default run state.....
-        // if(this.firstSpriteXPosition >= this.maxRun){
-        //     this.firstSpriteXPosition = 0;
-        // }else{ this.firstSpriteXPosition += this.runFrameX}
-        // } 
-
     }
     
 }
@@ -325,14 +331,6 @@ function randomRange(min,max){
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-function add(arr, position) {
-    var accumulator = 0;
-    for (var i = 0;i <= position; i++) {
-         accumulator += arr[i];
-    }
-    return i;
-}
-
 //get distance between circular objects
 function getDistance(x1, x2, y1, y2){
 	const xcoordinate = x2 - x1;
@@ -355,14 +353,25 @@ document.addEventListener('keydown',(e)=>{
     }
 })
 
+function endText(){
+    if(statusTracker === 'BOSS') return;
+        context.font = 'bold 60px Comic Sans MS'
+        context.fillStyle = 'yellow';
+        context.fillText('BOSS BATTLE', width/2 - 200, height/2)
+        context.strokeText('BOSS BATTLE', width/2 - 200, height/2)
+        console.log(statusTracker)
+
+}
+
 ////-------------------------------------------------------------GAME LOOP-------------------------------------------------
 function Game(){
 setInterval(() => {
+
     let tankFiring = Math.floor(Math.random() * enemyFleet.length); //variable to select a random tank in the array
 
     frame++ //kept trak of framerate for purpose of timing events.
 
-    if(statusTracker.innerHTML === 'YOU MADE IT TO THE END!' || statusTracker.innerHTML === 'YOU LOSE!'){
+    if(statusTracker === 'LOSE'){
          //stop game if this condition is true
         return;
     }
@@ -399,21 +408,32 @@ setInterval(() => {
 
      //every 10 frames    if array is not 0       this random tank fires if its within view
     if(frame % 10 === 0 && enemyFleet.length > 0 && enemyFleet[tankFiring].x < gameBoard.width){  
-        enemyFleet[tankFiring].shoot(enemyMag); //set random tanks to fire
+        // enemyFleet[tankFiring].shoot(enemyMag); //set random tanks to fire
     }
+
+    // if(statusTracker === 'END'){
+    //     console.log('we are at the end')
+    //     let boss = setTimeout(() => {
+    //         if(end === true){ clearTimeout(boss) }
+
+    //         // clearTimeout(end)
+    //     }, 3000);
+    // }
  
 }, interval)
 
 // push tanks into 'enemyFleet' array every 3 seconds
-let timer = setInterval(() =>{
-    enemyFleet.push(new BadGuy())
-}, 4000);
+    let timer = setInterval(() =>{
+        //if status is 'END' stop producing tanks
+        if(statusTracker === 'END'){ clearInterval(timer) }
+        enemyFleet.push(new BadGuy());
+    }, 4000);
 
 }
 
 //deploy game
 Game();
 
-console.log(context)
 
 }
+
