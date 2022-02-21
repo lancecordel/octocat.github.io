@@ -1,8 +1,8 @@
 window.onload = () =>{
 const gameBoard = document.querySelector('#gameBoard');
 const context = gameBoard.getContext('2d');
+// const bang = new sound('audio/bang.wav');
 let statusTracker = 'GAME';
-let end = false;
 
 gameBoard.width = 800;
 gameBoard.height = 562;
@@ -18,7 +18,26 @@ let frame = interval / 60;
 let enemyFleet = [];
 let mag = [];
 let enemyMag =[];
+let bossMag = [];
+let bossHouse = []
+// let gunAudio =[]
 
+
+    // //Sound Constructor
+    // function sound(src) {
+    //     this.sound = document.createElement("audio");
+    //     this.sound.src = src;
+    //     this.sound.setAttribute("preload", "auto");
+    //     this.sound.setAttribute("controls", "none");
+    //     this.sound.style.display = "none";
+    //     document.body.appendChild(this.sound);
+    //     this.play = function(){
+    //         this.sound.play();
+    //     }
+    //     this.stop = function(){
+    //         this.sound.pause();
+    //     }    
+    // }
 //---------------------------------------------------ENEMY BULLET------------------------------------------------------------
 class EnemyBullet{
     constructor(x, y){
@@ -52,7 +71,6 @@ class BadGuy{
         this.maxSpriteWidth = this.spritePositionWidth * 7;
         this.midRoad = 30;
         this.statusTracker = 0;
-
         this.width = 135;
         this.height = 120;
         this.image = document.querySelector('#tank');
@@ -76,18 +94,8 @@ class BadGuy{
                 this.x + this.width > bullet.x &&  
                 this.y < bullet.y + bullet.height &&
                 this.y + this.height > bullet.y) {
-
                     //Remove Bullet After Impact
                     bullet.markedForDeletion = true;
-                    
-                    //change animation frames of tank
-                //     this.spritePositionY = 1200;
-                //      this.height = 75;
-                //     this.width = 115
-
-                // if(this.firstSpriteXPosition >= 900){
-                //     this.firstSpriteXPosition = 115;
-                //     }else{this.firstSpriteXPosition += 115}
             }
         }) 
         //////Animate tank 
@@ -105,6 +113,100 @@ class BadGuy{
     }
     
 }
+
+//---------------------------------------------------------BOSS BULLET---------
+class BossBullet{
+    constructor(x, y){
+        this.xVelocity = 40;
+        this.x = x;
+        this.y = y;
+        this.radius = 7;
+    }
+    draw(){
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        context.fillStyle = 'aqua';
+        context.fill();
+        context.stroke();
+        }
+
+    update(player){
+        this.x -= this.xVelocity;
+        }
+}
+
+///---------------------------------------------BOSS-----------------------------
+class Boss{
+    constructor(){
+        this.firstSpriteXPosition = 0;
+        this.spritePositionY = 840;
+        this.spritePositionWidth = 213;
+        // this.spriteExplosionWidth = 115;
+        this.maxSpriteWidth = this.spritePositionWidth * 9;
+        this.midRoad = 30;
+        this.width = 213;
+        this.height = 140;
+        this.image = document.querySelector('#clone');
+        this.x = width;
+        this.y = height / 2 + this.height/2;
+        this.velocityX = 10;
+        this.velocityY = 2;
+        this.hits = [];
+
+    }
+    draw(){
+        context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
+
+    }
+    update(mag){ 
+             //pass 'player' bullet array for collision detection with Boss
+        this.x -= this.velocityX;
+        this.y += this.velocityY;
+        //once timer exceeds 430, boss is confined to a certain area
+        if(background.timer > 430){
+            //if boss gets to this border, got back
+            if(this.x < width/2 - 200 || this.x + this.width + 3 > width){
+                this.velocityX = -this.velocityX;
+                }
+            }
+        //if boss gets to this border, go back
+        if(this.y + this.height + 2 > height || this.y < height/2 + 30){
+            this.velocityY = -this.velocityY;
+        }
+        
+        mag.forEach(bullet=>{
+            //// If Collision between player bullet and boss
+            if (this.x + this.width/2 < bullet.x + bullet.width &&
+                this.x + this.width > bullet.x &&  
+                this.y < bullet.y + bullet.height &&
+                this.y + this.height > bullet.y) {
+                    //Remove Bullet After Impact
+                    bullet.markedForDeletion = true;
+                    
+                //     this.spritePositionY = 1200;
+                //      this.height = 75;
+                //     this.width = 115
+
+                // if(this.firstSpriteXPosition >= 900){
+                //     this.firstSpriteXPosition = 115;
+                //     }else{this.firstSpriteXPosition += 115}
+            }
+        }); 
+
+        //////Animate Boss
+        if(this.firstSpriteXPosition >= this.spritePositionWidth * 8){
+            this.firstSpriteXPosition = 0
+        }else{ this.firstSpriteXPosition += 211 }
+    }
+    ////Boss shoots back
+    shoot(bossMag){
+        if(statusTracker === 'BOSS'){
+        bossMag.push(new BossBullet(this.x + 33 , this.y + this.height/2)); //push bullet into mag array when called.
+        }
+    }
+    
+}
+
 
 ////------------------------------------------------------------BACKGROUND------------------------------------------------------
 class Background{
@@ -165,7 +267,7 @@ class Bullet{
         context.drawImage(this.image, this.bulletStartPosition, this.bulletYposition, 10, 10, this.x, this.y, this.width, this.height)
         
     } 
-    updateBullet(enemyFleet){
+    updateBullet(){
             this.x += this.velocityX
             //if bullet goes beyond border mark to be deleted
             if(this.x > gameBoard.width){
@@ -180,10 +282,27 @@ class Bullet{
                 this.y + this.height > tank.y){
                     //keep track of hits each tank recieves
                     tank.hits.push(1)
-                    //if hits exceed 11 destroy tank
-                    if(tank.hits.length > 11){ tank.markedForDeletion = true }
+                    //if hits exceed 5 destroy tank
+                    if(tank.hits.length > 5){ tank.markedForDeletion = true }
                 }
             });
+
+            bossHouse.forEach(boss=>{
+                if(this.x < boss.x + boss.width &&
+                 this.x + this.width > boss.x &&  
+                 this.y < boss.y + boss.height &&
+                 this.y + this.height > boss.y){
+                     //keep track of hits boss recieves
+                    if(background.timer > 430){
+                        boss.hits.push(1)
+                        //if hits exceed 20 destroy Boss
+                        if(boss.hits.length > 20){ 
+                            boss.markedForDeletion = true
+                         }
+                    }
+                 }           
+        }); 
+            
         } 
     }
 
@@ -212,6 +331,7 @@ class Player{
         this.playerHit = false;
         this.running = true;
         this.youLose = false;
+        this.youWin = false;
         this.walkingBack = false;
         this.walkingUp = false;
         this.walkingDown = false;
@@ -232,11 +352,10 @@ class Player{
         // context.stroke();
 
     }
-    upDatePlayer(controller, enemyMag, background){
+    upDatePlayer(controller, enemyMag, bossMag, background){
 
         //check distance between enemy bullet and player
         enemyMag.forEach(bullet => {
-            
             //Handle collision between 'player' and 'enemy bullet'
             const distance = getDistance(this.hitAreaX, bullet.x, this.hitAreaY, bullet.y)
             if(distance < this.hitAreaRadius + bullet.radius){
@@ -245,12 +364,26 @@ class Player{
             }
         });
 
+        //check distance between boss bullet and player
+        bossMag.forEach(bullet => {
+            //Handle collision between 'player' and 'enemy bullet'
+            const distance = getDistance(this.hitAreaX, bullet.x, this.hitAreaY, bullet.y)
+            if(distance < this.hitAreaRadius + bullet.radius){
+                bullet.markedForDeletion = true;  //mark enemy bullet for deletion after impact
+                this.playerHit = true; //set player hit to true
+            }
+        });
+        //BOSS BATTLE TEXT
         if(background.timer > 300 & background.timer < 420){
             endText();
         }
-
+        //SET STATUS TO BOSS BATTLE
         if(background.timer > 400){
             statusTracker = 'BOSS'
+        }
+        if(bossHouse.length === 0){
+            this.youWin = true;
+            win();
         }
 
         //set timeout for 'lose scene' after player is hit
@@ -351,8 +484,11 @@ function getDistance(x1, x2, y1, y2){
 //Instantiate background, tank, controller, player;
 const background = new Background(gameBoard.width,gameBoard.height);
 const tank = new BadGuy();
+const boss = new Boss()
 const controller = new Controller();
 const player = new Player(gameBoard.width, gameBoard.height); 
+
+bossHouse.push(boss);
 
 //Push bullets into 'mag' array
 document.addEventListener('keydown',(e)=>{
@@ -364,7 +500,7 @@ document.addEventListener('keydown',(e)=>{
 })
 
 function endText(){
-    if(statusTracker === 'BOSS') return;
+   
         context.font = 'bold 60px Comic Sans MS'
         context.fillStyle = 'yellow';
         context.fillText('BOSS BATTLE', width/2 - 200, height/2)
@@ -373,19 +509,26 @@ function endText(){
 }
 
 function madeIt(){
-    if(statusTracker === 'BOSS') return;
+
         context.font = 'bold 60px Comic Sans MS'
         context.fillStyle = 'yellow';
-        context.fillText('You Made It..', width/2 - 200, height/2)
-        context.strokeText('You Made It..', width/2 - 200, height/2)
+        context.fillText('Watch Out..', width/2 - 200, height/2)
+        context.strokeText('Watch Out..', width/2 - 200, height/2)
 }
 
 function NotOver(){
-    if(statusTracker === 'BOSS') return;
+    if(statusTracker === 'BOSS') 
         context.font = 'bold 60px Comic Sans MS'
         context.fillStyle = 'yellow';
         context.fillText('Its Not Over Yet..', width/2 - 300, height/2)
         context.strokeText('Its Not Over Yet..', width/2 - 300, height/2)
+}
+
+function win(){
+        context.font = 'bold 60px Comic Sans MS'
+        context.fillStyle = 'yellow';
+        context.fillText('YOU WIN!!', width/2 - 100, height/2)
+        context.strokeText('YOU WIN!!', width/2 - 100, height/2)
 }
 
 ////-------------------------------------------------------------GAME LOOP-------------------------------------------------
@@ -395,7 +538,7 @@ setInterval(() => {
     let tankFiring = Math.floor(Math.random() * enemyFleet.length); //variable to select a random tank in the array
 
     frame++ //kept trak of framerate for purpose of timing events.
-
+console.log(statusTracker)
     if(statusTracker === 'LOSE'){
          //stop game if this condition is true
         return;
@@ -407,15 +550,16 @@ setInterval(() => {
     background.backGroundScroll(player) //update background position every frame
 
     // remove collision objects
+    bossHouse = bossHouse.filter(boss => !boss.markedForDeletion);
     enemyFleet = enemyFleet.filter(tank=>!tank.markedForDeletion); //remove tanks market for deletion
     mag = mag.filter(bullet=> !bullet.markedForDeletion); // remove bullets market for deletion
     enemyMag = enemyMag.filter(bullet => !bullet.markedForDeletion);
 
     player.drawPlayer();  //make 'player' visible with every update
-    player.upDatePlayer(controller, enemyMag, background) //pass controller argument so player can be controlled
+    player.upDatePlayer(controller, enemyMag, bossMag, background) //pass controller argument so player can be controlled
 
     mag.forEach(bullet=> {
-        bullet.updateBullet(enemyFleet) //pass fleet through bullet update for collision detection
+        bullet.updateBullet(enemyFleet, bossHouse) //pass fleet through bullet update for collision detection
         bullet.drawBullet() //render bullet
     });
 
@@ -423,7 +567,7 @@ setInterval(() => {
         bullet.updateBullet(player);
         bullet.drawBullet();
         if(bullet.x < -50){ bullet.markedForDeletion = true } //if bullet goes of screen marke for deletion
-        
+         
     });
 
     enemyFleet.forEach(tank =>{
@@ -431,25 +575,40 @@ setInterval(() => {
         tank.drawTank();
     });
 
+    bossMag.forEach(bullet=>{
+        bullet.update(player);
+        bullet.draw();
+        if(bullet.x < -50){ bullet.markedForDeletion = true } //if bullet goes of screen marke for deletion
+        
+    });
+
      //every 10 frames    if array is not 0       this random tank fires if its within view
     if(frame % 10 === 0 && enemyFleet.length > 0 && enemyFleet[tankFiring].x < gameBoard.width){  
         enemyFleet[tankFiring].shoot(enemyMag); //set random tanks to fire
     }
- 
+    if(statusTracker === 'BOSS'){
+        bossHouse.forEach(boss =>{
+            boss.draw();
+            boss.update(mag);
+            //every 10 frames    if array is not 0       this random tank fires if its within view
+            if(frame % 30 === 0){  
+                boss.shoot(bossMag) //boss fires are random times     
+                }
+            });
+    } 
 }, interval)
+
 
 // push tanks into 'enemyFleet' array every 3 seconds
     let timer = setInterval(() =>{
         //if status is 'END' stop producing tanks
         if(statusTracker === 'END'){ clearInterval(timer) }
         enemyFleet.push(new BadGuy());
-    }, 4000);
-
+    }, 3700);
 }
 
 //deploy game
 Game();
-
 
 }
 

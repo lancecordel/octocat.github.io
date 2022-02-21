@@ -54,4 +54,7 @@ body{
 #bullet{
     display: none;
 }
+#clone{
+    display: none
+}
 
