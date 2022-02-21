@@ -1,7 +1,7 @@
 window.onload = () =>{
 const gameBoard = document.querySelector('#gameBoard');
 const context = gameBoard.getContext('2d');
-let statusTracker;
+let statusTracker = 'GAME';
 let end = false;
 
 gameBoard.width = 800;
@@ -117,6 +117,7 @@ class Background{
         this.x = 0;
         this.y = 0;
         this.scroll = 2;
+        this.timer = 0;
     }
     //backGround Image
     drawBackGround(){
@@ -124,6 +125,7 @@ class Background{
     }
     //background movement
     backGroundScroll(player){
+        // console.log(statusTracker)
         this.x -= this.scroll;
         if(this.x > -1480 && !player.playerHit){ //check if player was hit and if background is within  range
             this.x -=this.scroll;
@@ -132,7 +134,16 @@ class Background{
             if(this.scroll === 0 && !player.playerHit){ //if background is at the end, and player not hit show win message
                 // statusTracker.style.display = 'block'
                 statusTracker = 'END';
-                end = true;
+                this.timer++ //start timer at the end;
+                while(this.timer > 130 && this.timer < 200){ //Message saying 'YOU MADE It'
+                    madeIt();
+                    break;
+                    }
+                
+                while(this.timer > 210 && this.timer < 280){ //Message saying 'Its NOT OVER YET'
+                    NotOver();
+                    break;
+                    }       
             }
         }
     }
@@ -190,8 +201,8 @@ class Player{
         this.deathPositionY = 2263;
         // this.lose = [0, 188, 172, 170, 165, 166, 169, 166, 162, 161, 165, 166, 164] //0, 188, 360, 530, 695, 861, 1030, 1196, 1358, 1519, 1684, 1850, 2014
         // this.reduce = this.lose.reduce((acc, num) => acc + num);
-        this.velocityX = 8;
-        this.velocityY = 8;
+        this.velocityX = 10;
+        this.velocityY = 10;
         this.velocityXback = 14;
         this.buffer = 5;
         this.width = 182;
@@ -204,7 +215,7 @@ class Player{
         this.walkingBack = false;
         this.walkingUp = false;
         this.walkingDown = false;
-        this.timer = 0;
+        this.timer = 0; // timer to set events accordingly
     }
     drawPlayer(){
         //Hit Area Circle will now update with player location
@@ -216,9 +227,9 @@ class Player{
         context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
         
         ///player circular collision area
-        context.beginPath();
-        context.arc(this.x + this.width/2 - 20, this.y + this.height/2 - 10, this.height/3, 0, 2 * Math.PI)
-        context.stroke();
+        // context.beginPath();
+        // context.arc(this.x + this.width/2 - 20, this.y + this.height/2 - 10, this.height/3, 0, 2 * Math.PI)
+        // context.stroke();
 
     }
     upDatePlayer(controller, enemyMag, background){
@@ -234,13 +245,12 @@ class Player{
             }
         });
 
-        if(statusTracker === 'END'){
-            while(this.timer > 150 && this.timer < 400){
-                endText();
-                break;
-            }
-            this.timer++
+        if(background.timer > 300 & background.timer < 420){
+            endText();
+        }
 
+        if(background.timer > 400){
+            statusTracker = 'BOSS'
         }
 
         //set timeout for 'lose scene' after player is hit
@@ -359,8 +369,23 @@ function endText(){
         context.fillStyle = 'yellow';
         context.fillText('BOSS BATTLE', width/2 - 200, height/2)
         context.strokeText('BOSS BATTLE', width/2 - 200, height/2)
-        console.log(statusTracker)
 
+}
+
+function madeIt(){
+    if(statusTracker === 'BOSS') return;
+        context.font = 'bold 60px Comic Sans MS'
+        context.fillStyle = 'yellow';
+        context.fillText('You Made It..', width/2 - 200, height/2)
+        context.strokeText('You Made It..', width/2 - 200, height/2)
+}
+
+function NotOver(){
+    if(statusTracker === 'BOSS') return;
+        context.font = 'bold 60px Comic Sans MS'
+        context.fillStyle = 'yellow';
+        context.fillText('Its Not Over Yet..', width/2 - 300, height/2)
+        context.strokeText('Its Not Over Yet..', width/2 - 300, height/2)
 }
 
 ////-------------------------------------------------------------GAME LOOP-------------------------------------------------
@@ -387,7 +412,7 @@ setInterval(() => {
     enemyMag = enemyMag.filter(bullet => !bullet.markedForDeletion);
 
     player.drawPlayer();  //make 'player' visible with every update
-    player.upDatePlayer(controller, enemyMag) //pass controller argument so player can be controlled
+    player.upDatePlayer(controller, enemyMag, background) //pass controller argument so player can be controlled
 
     mag.forEach(bullet=> {
         bullet.updateBullet(enemyFleet) //pass fleet through bullet update for collision detection
@@ -408,17 +433,8 @@ setInterval(() => {
 
      //every 10 frames    if array is not 0       this random tank fires if its within view
     if(frame % 10 === 0 && enemyFleet.length > 0 && enemyFleet[tankFiring].x < gameBoard.width){  
-        // enemyFleet[tankFiring].shoot(enemyMag); //set random tanks to fire
+        enemyFleet[tankFiring].shoot(enemyMag); //set random tanks to fire
     }
-
-    // if(statusTracker === 'END'){
-    //     console.log('we are at the end')
-    //     let boss = setTimeout(() => {
-    //         if(end === true){ clearTimeout(boss) }
-
-    //         // clearTimeout(end)
-    //     }, 3000);
-    // }
  
 }, interval)
 
