@@ -2,4 +2,6 @@
 Press spacebar to shoot
 directional arrows to control character.
 
-DISABLE ENEMY FIRE TO WALK THROUGH GAME
+5 shots removs common enemy
+
+40 shots removes BOSS

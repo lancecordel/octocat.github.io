@@ -296,7 +296,7 @@ class Bullet{
                     if(background.timer > 430){
                         boss.hits.push(1)
                         //if hits exceed 20 destroy Boss
-                        if(boss.hits.length > 20){ 
+                        if(boss.hits.length > 40){ 
                             boss.markedForDeletion = true
                          }
                     }
