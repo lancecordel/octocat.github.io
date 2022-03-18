@@ -338,15 +338,15 @@ class Player{
     drawPlayer(){
         //Hit Area Circle will now update with player location
         this.hitAreaX = this.x + this.width/2 - 20;
-        this.hitAreaY = this.y + this.height/2 - 10;
-        this.hitAreaRadius = this.height/3;
+        this.hitAreaY = this.y + this.height/2 - 25;
+        this.hitAreaRadius = this.height/5;
 
                            //source             sourceX                  sourceY                sourceW             sourceH                       
         context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
         
-        ///player circular collision area
+        // ///player circular collision area visual aid reference
         // context.beginPath();
-        // context.arc(this.x + this.width/2 - 20, this.y + this.height/2 - 10, this.height/3, 0, 2 * Math.PI)
+        // context.arc(this.x + this.width/2 - 20, this.y + this.height/2 - 25, this.height/5, 0, 2 * Math.PI)
         // context.stroke();
 
     }
