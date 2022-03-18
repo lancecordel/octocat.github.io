@@ -1,7 +1,8 @@
 #octocat.github.io
-Press spacebar to shoot
-directional arrows to control character.
+#Press spacebar to shoot
+#directional arrows to control character.
 
-5 shots removs common enemy
+#6 hits will destroy tanks
+#20 hits will destroy boss
 
-40 shots removes BOSS
+

@@ -1,4 +1,4 @@
-window.onload = () =>{
+              window.onload = () =>{
 const gameBoard = document.querySelector('#gameBoard');
 const context = gameBoard.getContext('2d');
 // const bang = new sound('audio/bang.wav');
@@ -12,7 +12,6 @@ height = gameBoard.height;
 
 let interval = 60;
 let frame = interval / 60;
-
 
 // arrays....
 let enemyFleet = [];
@@ -218,7 +217,7 @@ class Background{
         this.height = 562;
         this.x = 0;
         this.y = 0;
-        this.scroll = 2;
+        this.scroll = 6;
         this.timer = 0;
     }
     //backGround Image
@@ -226,27 +225,26 @@ class Background{
         context.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
     //background movement
-    backGroundScroll(player){
-        // console.log(statusTracker)
-        this.x -= this.scroll;
-        if(this.x > -1480 && !player.playerHit){ //check if player was hit and if background is within  range
-            this.x -=this.scroll;
-        }else { 
-            this.scroll = 0;
-            if(this.scroll === 0 && !player.playerHit){ //if background is at the end, and player not hit show win message
+    backGroundScroll(player, controller, enemyFleet){
+        // this.x -= this.scroll;
+        if(this.x > -1480 && !player.playerHit && controller.keyPressed){ //check if player was hit and if background is within  range
+            this.x -= this.scroll;
+        } else {
+            if(!player.playerHit && enemyFleet.length === 0){ //if background is at the end, player is not hit and all ememys are removed from memory
                 // statusTracker.style.display = 'block'
                 statusTracker = 'END';
                 this.timer++ //start timer at the end;
-                while(this.timer > 130 && this.timer < 200){ //Message saying 'YOU MADE It'
+                while(this.timer > 70 && this.timer < 140){ //Message saying 'YOU MADE It'
                     madeIt();
                     break;
                     }
                 
-                while(this.timer > 210 && this.timer < 280){ //Message saying 'Its NOT OVER YET'
+                while(this.timer > 160 && this.timer < 230){ //Message saying 'Its NOT OVER YET'
                     NotOver();
                     break;
                     }       
             }
+
         }
     }
 }
@@ -296,7 +294,7 @@ class Bullet{
                     if(background.timer > 430){
                         boss.hits.push(1)
                         //if hits exceed 20 destroy Boss
-                        if(boss.hits.length > 40){ 
+                        if(boss.hits.length > 25){ 
                             boss.markedForDeletion = true
                          }
                     }
@@ -418,16 +416,17 @@ class Player{
             }, 3000);
         }
    
-        else if(controller.input.indexOf('ArrowRight') > -1 && this.x + this.width + this.buffer < this.boardWidth && !this.playerHit){
-           this.running = true;
+        if(controller.input.indexOf('ArrowRight') > -1 && this.x + this.width + this.buffer < this.boardWidth && !this.playerHit){
+            // console.log(controller.keyPressed)
+        //    this.running = true;
             this.x += this.velocityX;
             this.spritePositionY = 220;
-         if(this.firstSpriteXPosition >= this.maxRun){
+        if(this.firstSpriteXPosition >= this.maxRun){
              this.firstSpriteXPosition = 0;
          }else{ this.firstSpriteXPosition += this.runFrameX}
         }
         else if(controller.input.indexOf('ArrowLeft') > -1 && this.x > 0 && !this.playerHit){
-            this.walkingBack = true;
+            // this.walkingBack = true;
             this.x -= this.velocityXback;
             this.spritePositionY = 433;
             if(this.firstSpriteXPosition >= this.runFrameX * 4){
@@ -438,7 +437,7 @@ class Player{
             this.x = 0;
         }
         else if(controller.input.indexOf('ArrowUp') > -1 && this.y > this.boardHeight * .60 && !this.playerHit){
-            this.walkingUp = true;
+            // this.walkingUp = true;
             this.y -= this.velocityY; 
             this.spritePositionY = 220;
             if(this.firstSpriteXPosition >= this.maxRun){
@@ -446,7 +445,7 @@ class Player{
             }else{ this.firstSpriteXPosition += this.runFrameX}        
         } 
         else if(controller.input.indexOf('ArrowDown') > -1 && this.y + this.height < this.boardHeight && !this.playerHit){
-            this.walkingDown = true;
+            // this.walkingDown = true;
             this.y += this.velocityY; 
             this.spritePositionY = 220;
             if(this.firstSpriteXPosition >= this.maxRun){
@@ -463,16 +462,24 @@ class Player{
 
 ////-----------------------------------------------------------------------GAME CONTROLLER---------------------------------------
 class Controller{
-    constructor(){
+    constructor(player){
         this.input = [];
         document.addEventListener('keydown', (e) =>{
             if((e.key === "ArrowDown" || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') && this.input.indexOf(e.key) === -1){ 
                 this.input.push(e.key)
+                if(e.key === 'ArrowRight'){
+                    this.keyPressed = true;
+                    // console.log(this.pressed)
+                }
             }
-        })
+        });
         document.addEventListener('keyup', (e) =>{
             if(e.key === "ArrowDown" || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
                 this.input.splice(this.input.indexOf(e.key), 1)
+                if(e.key === 'ArrowRight'){
+                    this.keyPressed = !this.keyPressed;
+                    // console.log(this.pressed)
+                }
             }
         });
     }
@@ -480,7 +487,7 @@ class Controller{
 
 //random range generator
 function randomRange(min,max){
-	return Math.floor(Math.random() * (max - min + 1) + min);
+	return Math.floor(Math.random() * (max - min + 1) + min);          
 }
 
 //get distance between circular objects
@@ -541,7 +548,7 @@ function win(){
 }
 
 ////-------------------------------------------------------------GAME LOOP-------------------------------------------------
-function Game(){
+function Game(background){
 setInterval(() => {
 
     let tankFiring = Math.floor(Math.random() * enemyFleet.length); //variable to select a random tank in the array
@@ -556,7 +563,7 @@ console.log(statusTracker)
     context.clearRect(0, 0, gameBoard.width, gameBoard.height); //clear screen after every frame
 
     background.drawBackGround(gameBoard.width, gameBoard.height);  //make background visible
-    background.backGroundScroll(player) //update background position every frame
+    background.backGroundScroll(player, controller, enemyFleet) //update background position and pass player, controller and enemyFleet
 
     // remove collision objects
     bossHouse = bossHouse.filter(boss => !boss.markedForDeletion);
@@ -605,20 +612,20 @@ console.log(statusTracker)
                 }
             });
     } 
-    console.log(enemyFleet, enemyMag)
+    // console.log(enemyFleet, enemyMag)
 }, interval)
 
 
 // push tanks into 'enemyFleet' array every 3 seconds
     let timer = setInterval(() =>{
-        //if status is 'END' stop producing tanks
-        if(statusTracker === 'END'){ clearInterval(timer) }
+        //if player reaches the end, stop producing tanks
+        if(background.x <= -1480 ){ clearInterval(timer) }
         enemyFleet.push(new BadGuy());
     }, 3700);
 }
 
 //deploy game
-Game();
+Game(background);
 
 }
 
