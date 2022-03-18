@@ -17,5 +17,9 @@
     Clone repo
     deploy index.html
     THATS IT!
+    
+ # Play from HOST
+    Copy Link BELOW
+        https://app.netlify.com/sites/dazzling-thompson-92eaff
 
 
