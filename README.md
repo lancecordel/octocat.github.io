@@ -20,6 +20,6 @@
     
  # Play from HOST
     Copy Link BELOW
-        https://app.netlify.com/sites/dazzling-thompson-92eaff
+        https://dazzling-thompson-92eaff.netlify.app
 
 
