@@ -1,4 +1,4 @@
-# Controlls
+# Controls
     spacebar to shoot
     directional keys to controll character
 
