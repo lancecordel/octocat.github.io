@@ -20,6 +20,6 @@
     
  # Play from HOST
     Copy Link BELOW
- Open[https://dazzling-thompson-92eaff.netlify.app](https://dazzling-thompson-92eaff.netlify.app)
+ Open [https://dazzling-thompson-92eaff.netlify.app](https://dazzling-thompson-92eaff.netlify.app)
 
 
