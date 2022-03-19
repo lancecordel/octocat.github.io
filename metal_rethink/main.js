@@ -64,7 +64,7 @@ class BadGuy{
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
         this.firstSpriteXPosition = 0;
-        this.spritePositionY = 205;
+        this.runPositionY = 205;
         this.spritePositionWidth = 132;
         this.spriteExplosionWidth = 115;
         this.maxSpriteWidth = this.spritePositionWidth * 7;
@@ -82,7 +82,7 @@ class BadGuy{
         // randomRange(this.boardHeight - this.height, this.boardHeight - this.height - this.midRoad - this.midRoad);
     }
     drawTank(){
-        context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
+        context.drawImage(this.image, this.firstSpriteXPosition, this.runPositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
     }
     updateTank(mag){            //pass 'player' bullet array for collision detection with tank
         this.x += this.velocity
@@ -138,7 +138,7 @@ class BossBullet{
 class Boss{
     constructor(){
         this.firstSpriteXPosition = 0;
-        this.spritePositionY = 840;
+        this.runPositionY = 840;
         this.spritePositionWidth = 213;
         // this.spriteExplosionWidth = 115;
         this.maxSpriteWidth = this.spritePositionWidth * 9;
@@ -154,15 +154,15 @@ class Boss{
 
     }
     draw(){
-        context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
+        context.drawImage(this.image, this.firstSpriteXPosition, this.runPositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
 
     }
     update(mag){ 
              //pass 'player' bullet array for collision detection with Boss
         this.x -= this.velocityX;
         this.y += this.velocityY;
-        //once timer exceeds 430, boss is confined to a certain area
-        if(background.timer > 430){
+        //once timer exceeds 430 OR player reaches the end, boss is confined to a certain area
+        if(background.timer > 160 && background.x <= -1480){
             //if boss gets to this border, got back
             if(this.x < width/2 - 200 || this.x + this.width + 3 > width){
                 this.velocityX = -this.velocityX;
@@ -182,7 +182,7 @@ class Boss{
                     //Remove Bullet After Impact
                     bullet.markedForDeletion = true;
                     
-                //     this.spritePositionY = 1200;
+                //     this.runPositionY = 1200;
                 //      this.height = 75;
                 //     this.width = 115
 
@@ -229,20 +229,20 @@ class Background{
         // this.x -= this.scroll;
         if(this.x > -1480 && !player.playerHit && controller.keyPressed){ //check if player was hit and if background is within  range
             this.x -= this.scroll;
-        } else {
-            if(!player.playerHit && enemyFleet.length === 0){ //if background is at the end, player is not hit and all ememys are removed from memory
-                // statusTracker.style.display = 'block'
-                statusTracker = 'END';
-                this.timer++ //start timer at the end;
-                while(this.timer > 70 && this.timer < 140){ //Message saying 'YOU MADE It'
-                    madeIt();
-                    break;
-                    }
-                
-                while(this.timer > 160 && this.timer < 230){ //Message saying 'Its NOT OVER YET'
-                    NotOver();
-                    break;
-                    }       
+        } 
+        if(!player.playerHit && enemyFleet.length === 0 && this.x <= -1480){ //if background is at the end, player is not hit and all ememys are removed from memory
+            // statusTracker.style.display = 'block'
+            statusTracker = 'END';
+            this.timer++ //start timer at the end;
+            while(this.timer > 0 && this.timer < 70){ //Message saying 'YOU MADE It'
+                madeIt();
+                break;
+                }
+            //At this point, boss is initialized
+            while(this.timer > 100){
+                statusTracker = 'BOSS';
+                NotOver();
+                break; 
             }
 
         }
@@ -291,6 +291,7 @@ class Bullet{
                  this.y < boss.y + boss.height &&
                  this.y + this.height > boss.y){
                      //keep track of hits boss recieves
+                     //Give boss time to appear before hits start registering
                     if(background.timer > 430){
                         boss.hits.push(1)
                         //if hits exceed 20 destroy Boss
@@ -314,8 +315,9 @@ class Player{
         this.spritePositionWidth = 181; //width on sprite sheet
         this.runFrameX = 181;
         this.maxRun = 181 * 9; //Run Frames
-        this.spritePositionY = 220; //begining y position on sprite sheet.
+        this.runPositionY = 220; //begining y position on sprite sheet.
         this.deathPositionY = 2263;
+        this.idlePositionY = 117;
         // this.lose = [0, 188, 172, 170, 165, 166, 169, 166, 162, 161, 165, 166, 164] //0, 188, 360, 530, 695, 861, 1030, 1196, 1358, 1519, 1684, 1850, 2014
         // this.reduce = this.lose.reduce((acc, num) => acc + num);
         this.velocityX = 10;
@@ -342,7 +344,7 @@ class Player{
         this.hitAreaRadius = this.height/5;
 
                            //source             sourceX                  sourceY                sourceW             sourceH                       
-        context.drawImage(this.image, this.firstSpriteXPosition, this.spritePositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
+        context.drawImage(this.image, this.firstSpriteXPosition, this.runPositionY, this.spritePositionWidth, this.height, this.x, this.y, this.width, this.height);
         
         // ///player circular collision area visual aid reference
         // context.beginPath();
@@ -372,13 +374,13 @@ class Player{
             }
         });
         //BOSS BATTLE TEXT
-        if(background.timer > 300 & background.timer < 420){
+        if(background.timer > 75 & background.timer < 100){
             endText();
         }
-        //SET STATUS TO BOSS BATTLE
-        if(background.timer > 400){
-            statusTracker = 'BOSS'
-        }
+        // //SET STATUS TO BOSS BATTLE
+        // if(background.timer > 250){
+        //     statusTracker = 'BOSS'
+        // }
         if(bossHouse.length === 0){
             this.youWin = true;
             statusTracker = 'WIN';
@@ -392,7 +394,7 @@ class Player{
                 this.running = false;
                 this.firstSpriteXPosition = 1850; //death scene
                 this.firstSpriteXPosition = 1850? this.firstSpriteXPosition = 1850: this.firstSpriteXPosition = 1850;
-                this.spritePositionY = 2263;
+                this.runPositionY = 2263;
                 clearTimeout(timer)
             }, 100);
         }
@@ -415,47 +417,51 @@ class Player{
                 clearTimeout(timer)
             }, 3000);
         }
-   
+      
+        //PLAYER DIRECTION AND SPRITE CONTROLLS
         if(controller.input.indexOf('ArrowRight') > -1 && this.x + this.width + this.buffer < this.boardWidth && !this.playerHit){
-            // console.log(controller.keyPressed)
-        //    this.running = true;
             this.x += this.velocityX;
-            this.spritePositionY = 220;
+            this.runPositionY = 220;
         if(this.firstSpriteXPosition >= this.maxRun){
              this.firstSpriteXPosition = 0;
-         }else{ this.firstSpriteXPosition += this.runFrameX}
+         }
+         this.firstSpriteXPosition += this.runFrameX
         }
         else if(controller.input.indexOf('ArrowLeft') > -1 && this.x > 0 && !this.playerHit){
-            // this.walkingBack = true;
             this.x -= this.velocityXback;
-            this.spritePositionY = 433;
+            this.runPositionY = 433;
             if(this.firstSpriteXPosition >= this.runFrameX * 4){
                 this.firstSpriteXPosition = 0;
-            }else{ this.firstSpriteXPosition += this.runFrameX}   
+            } else { this.firstSpriteXPosition += this.runFrameX}   
             }
+        //prevent player from going off screen to the left
         else if(this.x < 0){
             this.x = 0;
         }
         else if(controller.input.indexOf('ArrowUp') > -1 && this.y > this.boardHeight * .60 && !this.playerHit){
-            // this.walkingUp = true;
             this.y -= this.velocityY; 
-            this.spritePositionY = 220;
+            this.runPositionY = 220;
             if(this.firstSpriteXPosition >= this.maxRun){
                 this.firstSpriteXPosition = 0;
-            }else{ this.firstSpriteXPosition += this.runFrameX}        
+            } else { this.firstSpriteXPosition += this.runFrameX}        
         } 
         else if(controller.input.indexOf('ArrowDown') > -1 && this.y + this.height < this.boardHeight && !this.playerHit){
-            // this.walkingDown = true;
             this.y += this.velocityY; 
-            this.spritePositionY = 220;
+            this.runPositionY = 220;
             if(this.firstSpriteXPosition >= this.maxRun){
                 this.firstSpriteXPosition = 0;
-            }else{ this.firstSpriteXPosition += this.runFrameX}        
+            } else { this.firstSpriteXPosition += this.runFrameX}        
         } 
-
+        else if(!controller.keyPressed){
+            //if button is not press, idle stance
+            this.runPositionY = this.idlePositionY
+            this.firstSpriteXPosition = 0
+         
+        }
+        //prevent player from going past max width of screen
         if(this.x + this.width + this.buffer > gameBoard.width ){
             this.x = this.boardWidth - this.width;
-        } 
+        }
     }
     
 }
@@ -504,6 +510,7 @@ const boss = new Boss()
 const controller = new Controller();
 const player = new Player(gameBoard.width, gameBoard.height); 
 
+//addboss to array
 bossHouse.push(boss);
 
 //Push bullets into 'mag' array
